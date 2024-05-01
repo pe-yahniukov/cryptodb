@@ -1,0 +1,18 @@
+[submodule "external/cJSON"]
+	path = external/cJSON
+	url = https://github.com/DaveGamble/cJSON.git
+[submodule "external/crc32c"]
+	path = external/crc32c
+	url = https://github.com/google/crc32c.git
+[submodule "external/leveldb"]
+	path = external/leveldb
+	url = https://github.com/google/leveldb.git
+[submodule "external/leveldb.windows"]
+	path = external/leveldb.windows
+	url = https://github.com/google/leveldb.git
+[submodule "external/mbedtls"]
+	path = external/mbedtls
+	url = https://github.com/Mbed-TLS/mbedtls.git
+[submodule "external/scprng"]
+	path = external/scprng
+	url = https://github.com/pe-yahniukov/scprng.git
