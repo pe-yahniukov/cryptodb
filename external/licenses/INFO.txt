@@ -1,0 +1,20 @@
+cJSON:
+
+	See LICENSE.cJSON in this folder.
+
+crc32c:
+
+	See LICENSE.crc32c file in this folder.
+
+leveldb:
+
+	See LICENSE.leveldb and file in this folder.
+
+mbedtls:
+
+	Dual-license Apache-2.0 OR GPL-2.0-or-later.
+	See LICENSE.mbedtls file in this folder.
+
+scprng:
+
+	MIT license. See LICENSE.scprng file in this folder.

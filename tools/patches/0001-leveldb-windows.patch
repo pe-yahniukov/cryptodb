@@ -1,0 +1,191 @@
+diff --git a/db/db_impl.cc b/db/db_impl.cc
+index 1a4e459..ed565f5 100644
+--- a/db/db_impl.cc
++++ b/db/db_impl.cc
+@@ -273,8 +273,7 @@ void DBImpl::RemoveObsoleteFiles() {
+         if (type == kTableFile) {
+           table_cache_->Evict(number);
+         }
+-        Log(options_.info_log, "Delete type=%d #%lld\n", static_cast<int>(type),
+-            static_cast<unsigned long long>(number));
++        Log(options_.info_log, "Delete type=%d #%d\n", static_cast<int>(type), static_cast<int>(number));
+       }
+     }
+   }
+@@ -420,8 +419,7 @@ Status DBImpl::RecoverLogFile(uint64_t log_number, bool last_log,
+   // to be skipped instead of propagating bad information (like overly
+   // large sequence numbers).
+   log::Reader reader(file, &reporter, true /*checksum*/, 0 /*initial_offset*/);
+-  Log(options_.info_log, "Recovering log #%llu",
+-      (unsigned long long)log_number);
++  Log(options_.info_log, "Recovering log #%d", (int)log_number);
+ 
+   // Read all the records and add to a memtable
+   std::string scratch;
+@@ -510,8 +508,7 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
+   meta.number = versions_->NewFileNumber();
+   pending_outputs_.insert(meta.number);
+   Iterator* iter = mem->NewIterator();
+-  Log(options_.info_log, "Level-0 table #%llu: started",
+-      (unsigned long long)meta.number);
++  Log(options_.info_log, "Level-0 table #%d: started", (int)meta.number);
+ 
+   Status s;
+   {
+@@ -520,8 +517,8 @@ Status DBImpl::WriteLevel0Table(MemTable* mem, VersionEdit* edit,
+     mutex_.Lock();
+   }
+ 
+-  Log(options_.info_log, "Level-0 table #%llu: %lld bytes %s",
+-      (unsigned long long)meta.number, (unsigned long long)meta.file_size,
++  Log(options_.info_log, "Level-0 table #%d: %d bytes %s",
++      (int)meta.number, (int)meta.file_size,
+       s.ToString().c_str());
+   delete iter;
+   pending_outputs_.erase(meta.number);
+@@ -741,9 +738,9 @@ void DBImpl::BackgroundCompaction() {
+       RecordBackgroundError(status);
+     }
+     VersionSet::LevelSummaryStorage tmp;
+-    Log(options_.info_log, "Moved #%lld to level-%d %lld bytes %s: %s\n",
+-        static_cast<unsigned long long>(f->number), c->level() + 1,
+-        static_cast<unsigned long long>(f->file_size),
++    Log(options_.info_log, "Moved #%d to level-%d %d bytes %s: %s\n",
++        static_cast<int>(f->number), c->level() + 1,
++        static_cast<int>(f->file_size),
+         status.ToString().c_str(), versions_->LevelSummary(&tmp));
+   } else {
+     CompactionState* compact = new CompactionState(c);
+@@ -862,10 +859,10 @@ Status DBImpl::FinishCompactionOutputFile(CompactionState* compact,
+     s = iter->status();
+     delete iter;
+     if (s.ok()) {
+-      Log(options_.info_log, "Generated table #%llu@%d: %lld keys, %lld bytes",
+-          (unsigned long long)output_number, compact->compaction->level(),
+-          (unsigned long long)current_entries,
+-          (unsigned long long)current_bytes);
++      Log(options_.info_log, "Generated table #%d@%d: %d keys, %d bytes",
++          (int)output_number, compact->compaction->level(),
++          (int)current_entries,
++          (int)current_bytes);
+     }
+   }
+   return s;
+@@ -873,10 +870,10 @@ Status DBImpl::FinishCompactionOutputFile(CompactionState* compact,
+ 
+ Status DBImpl::InstallCompactionResults(CompactionState* compact) {
+   mutex_.AssertHeld();
+-  Log(options_.info_log, "Compacted %d@%d + %d@%d files => %lld bytes",
++  Log(options_.info_log, "Compacted %d@%d + %d@%d files => %d bytes",
+       compact->compaction->num_input_files(0), compact->compaction->level(),
+       compact->compaction->num_input_files(1), compact->compaction->level() + 1,
+-      static_cast<long long>(compact->total_bytes));
++      static_cast<int>(compact->total_bytes));
+ 
+   // Add compaction outputs
+   compact->compaction->AddInputDeletions(compact->compaction->edit());
+diff --git a/db/repair.cc b/db/repair.cc
+index 97a27c6..0ed3ab3 100644
+--- a/db/repair.cc
++++ b/db/repair.cc
+@@ -81,10 +81,10 @@ class Repairer {
+       }
+       Log(options_.info_log,
+           "**** Repaired leveldb %s; "
+-          "recovered %d files; %llu bytes. "
++          "recovered %d files; %d bytes. "
+           "Some data may have been lost. "
+           "****",
+-          dbname_.c_str(), static_cast<int>(tables_.size()), bytes);
++          dbname_.c_str(), static_cast<int>(tables_.size()), (int)bytes);
+     }
+     return status;
+   }
+@@ -133,8 +133,8 @@ class Repairer {
+       std::string logname = LogFileName(dbname_, logs_[i]);
+       Status status = ConvertLogToTable(logs_[i]);
+       if (!status.ok()) {
+-        Log(options_.info_log, "Log #%llu: ignoring conversion error: %s",
+-            (unsigned long long)logs_[i], status.ToString().c_str());
++        Log(options_.info_log, "Log #%d: ignoring conversion error: %s",
++            (int)logs_[i], status.ToString().c_str());
+       }
+       ArchiveFile(logname);
+     }
+@@ -147,8 +147,8 @@ class Repairer {
+       uint64_t lognum;
+       void Corruption(size_t bytes, const Status& s) override {
+         // We print error messages for corruption, but continue repairing.
+-        Log(info_log, "Log #%llu: dropping %d bytes; %s",
+-            (unsigned long long)lognum, static_cast<int>(bytes),
++        Log(info_log, "Log #%d: dropping %d bytes; %s",
++            (int)lognum, static_cast<int>(bytes),
+             s.ToString().c_str());
+       }
+     };
+@@ -191,8 +191,8 @@ class Repairer {
+       if (status.ok()) {
+         counter += WriteBatchInternal::Count(&batch);
+       } else {
+-        Log(options_.info_log, "Log #%llu: ignoring %s",
+-            (unsigned long long)log, status.ToString().c_str());
++        Log(options_.info_log, "Log #%d: ignoring %s",
++            (int)log, status.ToString().c_str());
+         status = Status::OK();  // Keep going with rest of file
+       }
+     }
+@@ -212,8 +212,8 @@ class Repairer {
+         table_numbers_.push_back(meta.number);
+       }
+     }
+-    Log(options_.info_log, "Log #%llu: %d ops saved to Table #%llu %s",
+-        (unsigned long long)log, counter, (unsigned long long)meta.number,
++    Log(options_.info_log, "Log #%d: %d ops saved to Table #%d %s",
++        (int)log, counter, (int)meta.number,
+         status.ToString().c_str());
+     return status;
+   }
+@@ -248,8 +248,8 @@ class Repairer {
+     if (!status.ok()) {
+       ArchiveFile(TableFileName(dbname_, number));
+       ArchiveFile(SSTTableFileName(dbname_, number));
+-      Log(options_.info_log, "Table #%llu: dropped: %s",
+-          (unsigned long long)t.meta.number, status.ToString().c_str());
++      Log(options_.info_log, "Table #%d: dropped: %s",
++          (int)t.meta.number, status.ToString().c_str());
+       return;
+     }
+ 
+@@ -262,8 +262,8 @@ class Repairer {
+     for (iter->SeekToFirst(); iter->Valid(); iter->Next()) {
+       Slice key = iter->key();
+       if (!ParseInternalKey(key, &parsed)) {
+-        Log(options_.info_log, "Table #%llu: unparsable key %s",
+-            (unsigned long long)t.meta.number, EscapeString(key).c_str());
++        Log(options_.info_log, "Table #%d: unparsable key %s",
++            (int)t.meta.number, EscapeString(key).c_str());
+         continue;
+       }
+ 
+@@ -281,8 +281,8 @@ class Repairer {
+       status = iter->status();
+     }
+     delete iter;
+-    Log(options_.info_log, "Table #%llu: %d entries %s",
+-        (unsigned long long)t.meta.number, counter, status.ToString().c_str());
++    Log(options_.info_log, "Table #%d: %d entries %s",
++        (int)t.meta.number, counter, status.ToString().c_str());
+ 
+     if (status.ok()) {
+       tables_.push_back(t);
+@@ -335,8 +335,8 @@ class Repairer {
+       std::string orig = TableFileName(dbname_, t.meta.number);
+       s = env_->RenameFile(copy, orig);
+       if (s.ok()) {
+-        Log(options_.info_log, "Table #%llu: %d entries repaired",
+-            (unsigned long long)t.meta.number, counter);
++        Log(options_.info_log, "Table #%d: %d entries repaired",
++            (int)t.meta.number, counter);
+         tables_.push_back(t);
+       }
+     }

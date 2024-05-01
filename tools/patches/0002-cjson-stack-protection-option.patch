@@ -1,0 +1,30 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0d807ea..07b170b 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -16,6 +16,7 @@ set(custom_compiler_flags)
+ 
+ include(CheckCCompilerFlag)
+ option(ENABLE_CUSTOM_COMPILER_FLAGS "Enables custom compiler flags" ON)
++option(ENABLE_STACK_PROTECTION_STRONG "Enables custom compiler flags" ON)
+ if (ENABLE_CUSTOM_COMPILER_FLAGS)
+     if (("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang") OR ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU"))
+         list(APPEND custom_compiler_flags
+@@ -37,7 +38,6 @@ if (ENABLE_CUSTOM_COMPILER_FLAGS)
+             -Wswitch-default
+             -Wconversion
+             -Wc++-compat
+-            -fstack-protector-strong
+             -Wcomma
+             -Wdouble-promotion
+             -Wparentheses
+@@ -47,6 +47,9 @@ if (ENABLE_CUSTOM_COMPILER_FLAGS)
+             -Wused-but-marked-unused
+             -Wswitch-enum
+         )
++        if (ENABLE_STACK_PROTECTION_STRONG)
++            list(APPEND custom_compiler_flags -fstack-protector-strong)
++        endif()
+     elseif("${CMAKE_C_COMPILER_ID}" STREQUAL "MSVC")
+         # Disable warning c4001 - nonstandard extension 'single line comment' was used
+         # Define _CRT_SECURE_NO_WARNINGS to disable deprecation warnings for "insecure" C library functions
